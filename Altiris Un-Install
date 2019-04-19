@@ -1,0 +1,25 @@
+# Altiris Uninstllation Playbook
+---
+- name: Un-Install Altiris
+  hosts: all
+  gather_facts: no
+  strategy: free
+  serial: 1
+  tasks:
+  - name: Check if altris stop/start path exists
+    stat: path=/opt/altiris/notification/nsagent/bin/rcscript
+    register: altris_status
+
+  - name: stop the altris if path exits
+    shell: |
+      echo `hostname`
+      echo "-------------------------------"
+      /opt/altiris/notification/nsagent/bin/rcscript stop
+      yes | /opt/altiris/notification/nsagent/bin/aex-uninstall
+    when: altris_status.stat.exists == True
+    register: altris_stop
+
+  - name: Storing the remote Hosts Output locally for altris Uninstallation
+    lineinfile: create=yes dest=/logs/altiris.logs  line="{{ altris_stop.stdout }}"
+    when: altris_status.stat.exists == True
+    delegate_to: 127.0.0.1
