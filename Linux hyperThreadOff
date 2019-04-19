@@ -1,0 +1,34 @@
+# This Playbook shows how to disable hyperthreading on the Linux system 
+# This Will first copy the hyperthreading script to the remote Servers
+# and then will run the script on the remote host to disable HT
+---
+- name: Ansible copy file's to remote Servers and symlink it
+  hosts: all
+  remote_user: root
+  become: true
+  gather_facts: False
+  tasks:
+  - name: copy cpu_hyperThreadOff from local to remote hosts
+    copy: src=/Karn/cpu_hyperThreadOff.sh  dest=/etc/init.d/cpu_hyperThreadOff.sh  owner=root group=root mode=0755
+
+  - name: running cpu_hyperThreadOff.sh on the host
+    shell: /etc/init.d/cpu_hyperThreadOff.sh
+
+  - name: Create symlink of cpu_hyperThreadOff.sh to rc.d
+    file: src=/etc/init.d/cpu_hyperThreadOff.sh dest=/etc/rc.d/cpu_hyperThreadOff.sh owner=root group=root mode=0755 state=link
+
+======================================================================
+ Below is the Script For Disabling Hyperthreding on the Linux Systems.
+======================================================================
+# cat cpu_hyperThreadOff.sh
+#!/usr/bin/env bash
+#---------------------------------------------------------------------------------------------------------------------
+# Author: Karn Kumar Date:23/02/2018
+# this will disable HT on the system but the changes will be purge on boot
+# to make the changes permanent place the script on run time execution on boot under /etc/init.d/ and link it to rc.d
+# chmod +x /etc/init.d/cpu_hyperThreadOff.sh && ln -s /etc/init.d/cpu_hyperThreadOff.sh /etc/rc.d/
+#----------------------------------------------------------------------------------------------------------------------
+for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un)
+do
+        echo 0 > /sys/devices/system/cpu/cpu$cpunum/online
+done
