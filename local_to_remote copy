@@ -1,0 +1,15 @@
+# this tiny playbook shows how to copy the file from local ansible server
+# to the remote Servers using source(src) and destination(dst) attributes
+# With copy module
+---
+- name: Ansible copy file's to remote Servers
+  hosts: all
+  remote_user: root
+  become: true
+  gather_facts: False
+  tasks:
+  - name: copy the file restart-ntpd from local to remote hosts
+    copy: src=/opt/restart-ntpd  dest=/opt/restart-ntpd  owner=root group=root mode=0755
+
+  - name: running restart-ntpd
+    shell: /opt/restart-ntpd
