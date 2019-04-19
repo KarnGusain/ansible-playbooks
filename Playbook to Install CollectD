@@ -1,0 +1,57 @@
+# Playbook to Install CollectD
+# This is Just an Illustartion 
+
+---
+- name: Playbook to Install CollectD
+  hosts: all
+  remote_user: root
+  become: true
+  tasks:
+  - name: Downloading collectd
+    get_url:
+      url="http://webserver.example.com/collectd-5.7.2.tar.gz"
+      dest="/opt/"
+
+  - name:  Extracting collectd archive
+    unarchive:
+      src="/opt/collectd-5.7.2.tar.gz"
+      dest="/opt/"
+      remote_src=True
+
+  - name:  Creating soft link to collectd Dir
+    file:
+      src: "/opt/collectd-5.7.2"
+      dest: "/opt/collectd"
+      state: link
+      owner: root
+      group: root
+#############################################################################################
+# Dont Disable the gather_facts at all as {{ ansible_hostname }} absolutlty depends on facts #
+# ###########################################################################################
+
+  - name: Committing changes to collectd configuration....
+    lineinfile:
+      dest: "{{ item.dest }}"
+      regexp: "{{ item.regexp }}"
+      line: "{{ item.line }}"
+      backrefs: yes
+    with_items:
+        # Below will change the default hostname `host.example.com` to your actual hostname
+      - { dest: '/opt/collectd/etc/collectd.conf', regexp: '#Hostname    "host.example.com"', line: 'Hostname  "{{ ansible_hostname }}"' }
+        # Below will change the default `collectd.unix` to `collectd.dns.EMEA.dublin.VM.`
+      - { dest: '/opt/collectd/etc/collectd.conf', regexp: '#    Prefix "collectd.unix."', line: '    Prefix "collectd.dns.EMEA.dublin.VM."' }
+
+  - name: Copy the collectd Daemon to init ..
+    copy:
+      src: "/opt/collectd/startup/collectd"
+      dest: "/etc/init.d/"
+      remote_src: True
+      mode: 0755
+      owner: root
+      group: root
+
+  - name: starting collectd Service
+    service:
+      name: collectd
+      state: started
+      enabled: yes
