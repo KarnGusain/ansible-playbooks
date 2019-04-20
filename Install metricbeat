@@ -1,0 +1,30 @@
+# This is the Playbook for installing the Metricbeat on the Linux client, which altogether adds the yum repository
+# and subsequently insatlls the Metricbeat agent and then copies the customised metricbeat.yml file from the ansible
+# master to the remote client and sets the permission sets as well and starts the metricbeart at last.
+
+---
+- hosts: all
+  tasks:
+  - name: Adding repository for Metricbeat/Elastic
+    yum_repository:
+      name: metricbeat
+      description: Beat
+      baseurl: https://artifacts.elastic.co/packages/6.x/yum  # For version 5 use 5.x instead of 6.x
+      gpgcheck: 1
+      gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+      enabled: 1
+      owner: root
+      group: root
+      state: present
+      mode: 0600
+
+  - name: Ensure Metricbeat is installed.
+    yum: name=metricbeat state=present
+    #yum: name=metricbeat state=latest  #It will go ahead and update if it is not of the latest available version.
+    #yum: name=metricbeat=x.y.z state=present  # To install specific version (x.y.z)
+
+  - name: Copy Metricbeat standard yaml file to destination
+    copy: src="/tmp/metricbeat.yml"  dest="/etc/metricbeat/metricbeat.yml" owner=root group=root mode=0600
+
+  - name: Ensure metricbeat is running
+    service: name=metricbeat enabled=yes state=started
