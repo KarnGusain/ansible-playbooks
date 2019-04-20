@@ -1,0 +1,25 @@
+# The regexp option tells the module what will be the content to replace.
+# The line parameter replaces the previously found content with the new content of your choice.
+# backrefs(boolean): Used with state=present. If set, line can contain backreferences (both positional and named) that will
+# get populated if the regexp matches. This flag changes the operation of the module slightly; insertbefore and insertafter
+# will be ignored, and if the regexp doesn't match anywhere in the file, the file will be left unchanged. If the regexp does match,
+# the last matching line will be replaced by the expanded line parameter.
+---
+- name: Playbook to replace line in nsswitch.conf
+  hosts: all
+  remote_user: root
+  gather_facts: False
+  tasks:
+    - name: replace the line desired line
+      lineinfile:
+        path: /etc/nsswitch.conf
+        state: present
+        regexp: '^(passwd: files ldap)$'
+        #regexp: '^(.*)passwd: files ldap(.*)$'
+        line: 'passwd_compat: ldap'
+        backrefs: yes
+        backup: yes
+      register: ns_out
+
+    - name: Debug output of the play on the master server
+      debug: var=ns_out
