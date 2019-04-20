@@ -1,6 +1,5 @@
-# This Playbook shows how to disable hyperthreading on the Linux system 
-# This Will first copy the hyperthreading script to the remote Servers
-# and then will run the script on the remote host to disable HT
+# This Playbook shows how to disable hyperthreading on the Linux system, this Will first copy the hyperthreading script to the 
+# remote Servers and then will run the script on the remote host to disable HT
 ---
 - name: Ansible copy file's to remote Servers and symlink it
   hosts: all
