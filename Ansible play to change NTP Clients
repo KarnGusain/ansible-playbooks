@@ -1,0 +1,32 @@
+#
+#
+---
+- name: Play to correct the config for NTP clients
+  hosts: all
+  remote_user: root
+  gather_facts: False
+
+  tasks:
+  - name: Changing the ntp server configuration on the client
+    lineinfile:
+      path: /etc/ntp.conf
+      ### line to be searched & matched
+      regexp: '{{ item.From }}'
+      ### line to be in placed
+      line: '{{ item.To }}'
+      state: present
+      backup: yes
+      backrefs: yes
+
+    with_items:
+    - { From: 'server ntp-host01 minpoll 4 maxpoll 10', To: 'server new-ntp-host01 minpoll 4 maxpoll 10'}
+    - { From: 'server ntp-hos02-b minpoll 4 maxpoll 10', To: 'server new-ntp-host02 minpoll 4 maxpoll 10'}
+    # Actions will be triggered at the end of each block of task and notifies a handler.
+    notify: restart_ntp_service
+  
+  handlers:
+  - name: restart_ntp_service
+    # referenced by a globally unique name and are notified by notifiers.
+    service:
+      name: ntpd
+      state: restarted
